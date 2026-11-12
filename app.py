@@ -8,7 +8,8 @@ from google.genai import types
 from pypdf import PdfReader
 from sentence_transformers import SentenceTransformer
 
-MODEL = "gemini-3.8-flash"
+# Tried in order: if one is busy or unavailable, the next one is used
+MODELS = ["gemini-3.8-flash", "gemini-3.5-flash-lite", "gemini-3.1-flash-lite"]
 
 st.set_page_config(page_title="Study Assistant", page_icon="📚", layout="centered")
 
@@ -64,16 +65,22 @@ def get_key():
 def generate(prompt, json_mode=False):
     client = genai.Client(api_key=get_key())
     config = types.GenerateContentConfig(response_mime_type="application/json") if json_mode else None
-    for attempt in range(4):
-        try:
-            reply = client.models.generate_content(model=MODEL, contents=prompt, config=config)
-            return reply.text
-        except Exception as e:
-            busy = "503" in str(e) or "UNAVAILABLE" in str(e) or "429" in str(e)
-            if busy and attempt < 3:
-                time.sleep(2 * (attempt + 1))  # wait 2s, 4s, 6s, then try again
-            else:
-                raise
+    last_error = None
+    for model in MODELS:
+        for attempt in range(2):
+            try:
+                reply = client.models.generate_content(model=model, contents=prompt, config=config)
+                return reply.text
+            except Exception as e:
+                last_error = e
+                msg = str(e)
+                if "404" in msg or "NOT_FOUND" in msg:
+                    break  # this model name is not available, try the next one
+                busy = "503" in msg or "UNAVAILABLE" in msg or "429" in msg
+                if not busy:
+                    raise
+                time.sleep(2)
+    raise last_error
 
 
 def ask_llm(question, context_chunks):
