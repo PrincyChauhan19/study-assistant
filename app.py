@@ -53,8 +53,16 @@ def find_relevant(question, chunks, vectors, embedder, k=4):
     return [chunks[i] for i in best]
 
 
+def get_key():
+    # On Streamlit Cloud the key comes from Secrets; on your laptop from the terminal
+    try:
+        return st.secrets["GEMINI_API_KEY"]
+    except Exception:
+        return os.environ["GEMINI_API_KEY"]
+
+
 def generate(prompt, json_mode=False):
-    client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
+    client = genai.Client(api_key=get_key())
     config = types.GenerateContentConfig(response_mime_type="application/json") if json_mode else None
     for attempt in range(4):
         try:
