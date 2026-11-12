@@ -13,8 +13,8 @@ Built with Python, Streamlit, sentence-transformers, and the Gemini API.
 
 ## Screenshots
 
-![Chat screen](screenshots/chat.png)
-![Quiz screen](screenshots/quiz.png)
+   ![Chat screen](Screenshot%202026-11-12%20053129.png)
+   ![Quiz screen](Screenshot%202026-11-12%20053438.png)
 
 ## How it works (RAG)
 
